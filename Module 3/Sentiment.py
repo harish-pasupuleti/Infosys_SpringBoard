@@ -5,34 +5,39 @@ from pinecone import Pinecone
 from langchain_together import TogetherEmbeddings
 from together import Together
 
-# 🎯 Set API keys
-TOGETHER_API_KEY = "485cd21c60235270dfc7bd18dc26039203aa712b0969ff6d565180fb91a1b42a"
-PINECONE_API_KEY = "pcsk_5Zr5u9_BKtodyBkPEoMs69MW5KZLcTB6crVJvLTctvfP7QBZ1DRarEfG8JFw11mcogEgsa"
+# 🎯 Set API keys (use environment variables for security)
+TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 PINECONE_INDEX_NAME = "hotel-reviews"
 
-# 🔑 Set environment variables
+if not TOGETHER_API_KEY or not PINECONE_API_KEY:
+    st.error("🚨 Error: API keys are missing! Set them as environment variables.")
+    st.stop()
+
+# 🔑 Set environment variable for Together API
 os.environ["TOGETHER_API_KEY"] = TOGETHER_API_KEY
 
 # 📂 Load dataset
 try:
     df = pd.read_excel('reviews_data.xlsx')
-    if "review_id" not in df.columns or "Review" not in df.columns:
-        st.error("🚨 Error: Missing 'review_id' or 'Review' columns in the dataset.")
+    required_columns = {"review_id", "Review", "Rating", "review_date"}
+    if not required_columns.issubset(df.columns):
+        st.error(f"🚨 Missing required columns: {required_columns - set(df.columns)}")
         st.stop()
 except FileNotFoundError:
-    st.error("📂 Error: The file 'reviews_data.xlsx' was not found!")
+    st.error("📂 Error: 'reviews_data.xlsx' not found!")
     st.stop()
 
 # 🌎 Initialize Pinecone
-pc = Pinecone(api_key=PINECONE_API_KEY)
-
-# ✅ Ensure Pinecone Index Exists
-if PINECONE_INDEX_NAME not in pc.list_indexes().names():
-    st.error(f"⚠️ Error: Pinecone index '{PINECONE_INDEX_NAME}' does not exist! Create it first.")
+try:
+    pc = Pinecone(api_key=PINECONE_API_KEY)
+    if PINECONE_INDEX_NAME not in pc.list_indexes().names():
+        st.error(f"⚠️ Error: Pinecone index '{PINECONE_INDEX_NAME}' does not exist! Create it first.")
+        st.stop()
+    index = pc.Index(PINECONE_INDEX_NAME)
+except Exception as e:
+    st.error(f"❌ Pinecone initialization failed: {e}")
     st.stop()
-
-# 🔗 Connect to Pinecone Index
-index = pc.Index(PINECONE_INDEX_NAME)
 
 # 🤖 Initialize Together AI Embeddings
 embeddings = TogetherEmbeddings(model="togethercomputer/m2-bert-80M-8k-retrieval")
@@ -73,19 +78,20 @@ if st.button("🚀 Analyze Sentiment"):
         else:
             matched_ids = [int(match["metadata"].get("review_id", -1)) for match in matches if "metadata" in match]
             matched_ids = [mid for mid in matched_ids if mid != -1]  # Remove invalid IDs
-            
             req_df = df[df["review_id"].isin(matched_ids)]
             concatenated_reviews = " ".join(req_df["Review"].tolist())
 
             # 📜 Generate Sentiment Summary
             response = client.chat.completions.create(
                 model="meta-llama/Llama-Vision-Free",
-                messages=[{"role": "user", "content": f"""
-                    Briefly summarize the overall sentiment of customers based on the reviews: {concatenated_reviews},
-                    and query of manager: {query}.
-                    Stick to the specific query of the manager and keep it short.
-                    Do not mention the name of the hotel.
-                """}]
+                messages=[
+                    {"role": "user", "content": f"""
+                        Provide a concise summary of customer sentiment based on the following reviews:
+                        {concatenated_reviews}.
+                        Focus specifically on the manager's query: '{query}'.
+                        Keep it short and objective. Do not mention the hotel's name.
+                    """}
+                ]
             )
 
             # 📢 Display Results
@@ -94,6 +100,5 @@ if st.button("🚀 Analyze Sentiment"):
 
             st.subheader("📝 Matched Reviews")
             st.dataframe(req_df[["Review"]])
-
     except Exception as e:
         st.error(f"❌ An error occurred: {e}")
