@@ -7,7 +7,7 @@ import xgboost
 import numpy as np
 from pymongo import MongoClient
 
-client = MongoClient("mongodb+srv://vishalcv:ccP2XVOJLM2br28R@riaapp.8ruib.mongodb.net/?ssl=true")
+client = MongoClient("mongodb+srv://harishpasupuleti18:QzPqXVRXmYAYygHZ@cluster0.knp4m.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 
 st.title("🏨 Hotel Booking Form")
 
