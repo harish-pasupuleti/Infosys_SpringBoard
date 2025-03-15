@@ -2,7 +2,7 @@ from pymongo import MongoClient
 import pandas as pd
 import xgboost as xgb
 
-client = MongoClient("mongodb+srv://vishalcv:ccP2XVOJLM2br28R@riaapp.8ruib.mongodb.net/?ssl=true")
+client = MongoClient("mongodb+srv://harishpasupuleti18:QzPqXVRXmYAYygHZ@cluster0.knp4m.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 
 db = client["hotel_guests"]
 
