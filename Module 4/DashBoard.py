@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 # ✅ Step 1: Connect to MongoDB and Fetch Data (with error handling)
 try:
-    client = MongoClient("mongodb+srv://harishpasupuleti18:QzPqXVRXmYAYygHZ@cluster0.knp4m.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+    client = MongoClient("mongodb+srv://harishpasupulet")
     db = client["HotelAnalytics"]
     
     booking_df = pd.DataFrame(list(db["BookingData"].find()))
