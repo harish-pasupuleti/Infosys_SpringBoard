@@ -8,7 +8,7 @@ from email.mime.text import MIMEText
 
 # Initialize Pinecone
 pc =  Pinecone(
-    api_key='pcsk_3ZZU8b_MmaPjaJL3ZMmaUoqFNcJkFPy2M46ySn7QWvFpNgH8p2ZZKi7SjJxJ2W1UHTUeJ5'
+    api_key='p5'
 )
 index_name = "hotel-reviews"
 if index_name not in pc.list_indexes().names():
@@ -61,7 +61,7 @@ def save_review(data):
 
     # Embed the review and store in Pinecone
     try:
-        embedding = together.embed_text(data["review"], api_key=os.environ.get("c0e3f0ff816fa5fdde9c8f22454a6f8777900ea945f7ec1928bb7903fc5b76e1"))
+        embedding = together.embed_text(data["review"], api_key=os.environ.get("c0e1"))
         index.upsert([(data["customer_id"], embedding, data)])
     except Exception as e:
         st.error(f"Error storing review in Pinecone: {e}")
